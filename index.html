@@ -1,0 +1,776 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Walaa — Tanta | Sales Hub</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/localforage/1.10.0/localforage.min.js"></script>
+<style>
+:root{--bg:#0f0f11;--card:#1c1c1e;--text:#fff;--muted:#8e8e93;--primary:#34c759;--blue:#0a84ff;--border:#2c2c2e;--red:#ff453a;--yellow:#ffd60a;--wa:#25D366;--email:#ea4335;--purple:#5e5ce6;--green:#217346}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Tahoma,sans-serif;margin:0;padding:0 0 75px}
+.container{padding:20px;max-width:420px;margin:auto}
+.header{text-align:center;margin-bottom:20px;position:relative;padding-top:10px}
+.header h1{font-size:20px;margin:0 0 5px}
+.header p{font-size:12px;color:var(--muted);margin:0}
+.lang-btn{position:absolute;top:0;inset-inline-end:0;background:var(--card);border:1px solid var(--primary);color:var(--primary);padding:6px 12px;border-radius:20px;cursor:pointer;font-size:12px;font-weight:bold}
+.nav{position:fixed;bottom:0;left:0;width:100%;background:#1a1a1c;border-top:1px solid var(--border);display:flex;justify-content:space-around;padding:8px 0;z-index:1000}
+.nav-item{display:flex;flex-direction:column;align-items:center;font-size:9px;color:var(--muted);cursor:pointer;flex:1;min-width:45px}
+.nav-item.active{color:var(--primary);font-weight:bold}
+.nav-item span:first-child{font-size:18px;margin-bottom:3px}
+.tab{display:none}
+.tab.active{display:block}
+.card{background:var(--card);border-radius:16px;padding:15px;border:1px solid var(--border);margin-bottom:15px}
+.card h3{margin:0 0 15px;font-size:15px;color:var(--primary)}
+input,select,textarea{background:var(--bg);border:1px solid var(--border);color:#fff;padding:12px;border-radius:10px;width:100%;box-sizing:border-box;font-size:14px;margin-bottom:10px;font-family:inherit}
+input:focus,textarea:focus{outline:none;border-color:var(--primary)}
+label{font-size:12px;color:var(--muted);display:block;margin-bottom:4px}
+.btn{background:var(--primary);color:#000;border:none;padding:12px;border-radius:10px;cursor:pointer;font-weight:bold;font-size:14px;width:100%;margin-bottom:5px;display:flex;justify-content:center;align-items:center;gap:5px}
+.btn-wa{background:var(--wa);color:#000}
+.btn-email{background:var(--email);color:#fff}
+.btn-excel{background:var(--green);color:#fff}
+.btn-gray{background:#444;color:#fff}
+.btn-danger{background:var(--red);color:#fff}
+.btn-save{background:var(--blue);color:#fff}
+.btn-sm{padding:8px;font-size:12px;width:auto}
+.save-row{display:flex;gap:5px;margin-bottom:15px;margin-top:5px}
+.save-row .btn{padding:10px 5px;font-size:12px;margin-bottom:0}
+.row{display:flex;gap:10px;margin-bottom:10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.calc{text-align:center;padding:15px;background:rgba(10,132,255,.05);border-radius:10px;border:1px dashed var(--blue);margin-bottom:15px}
+.progress{background:#333;border-radius:10px;height:16px;width:100%;margin:10px 0;overflow:hidden}
+.progress-bar{background:var(--primary);height:100%;width:0;text-align:center;color:#000;font-size:10px;font-weight:bold;line-height:16px}
+.stat-title{font-size:12px;color:var(--muted);margin-bottom:8px}
+.stat-value{font-size:22px;font-weight:bold}
+.stat-value.highlight{color:var(--primary)}
+.report-box{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:20px;font-family:'Courier New',monospace;font-size:14px;line-height:1.6;color:#fff}
+.report-item{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:15px}
+.report-info{display:flex;flex-direction:column;gap:4px}
+.report-name{font-weight:bold;font-size:15px}
+.report-detail{font-size:13px;color:#bbb;padding-inline-start:20px}
+.report-delete-btn{color:var(--red);background:transparent;border:none;font-size:20px;cursor:pointer;font-weight:bold;padding:0 5px}
+.report-divider{border-top:1px solid #555;margin:15px 0}
+.report-section-title{font-weight:bold;font-size:15px;margin-bottom:8px}
+.report-summary-line{font-weight:bold;font-size:14px;margin-bottom:4px}
+.email-composer{background:#fff;color:#333;border-radius:12px;overflow:hidden;margin-bottom:15px;border:1px solid #ddd}
+.email-header{background:#f1f3f4;padding:15px;border-bottom:1px solid #ddd;font-weight:bold;color:#5f6368}
+.email-field{padding:12px 15px;border-bottom:1px solid #eee;font-size:14px}
+.email-field span{color:#888;margin-inline-end:10px;font-size:12px}
+.email-body{padding:15px;font-size:14px;line-height:1.5;white-space:pre-wrap;min-height:200px;font-family:monospace}
+.contract-card{background:#2c2c2e;border-radius:12px;padding:15px;margin-bottom:10px;border-inline-start:5px solid var(--purple);display:flex;justify-content:space-between;align-items:center}
+.contract-info{display:flex;flex-direction:column;gap:6px;width:100%}
+.contract-header-row{display:flex;justify-content:space-between;align-items:center}
+.contract-date{font-weight:bold;color:var(--muted);font-size:13px}
+.contract-count{font-size:18px;font-weight:bold;color:var(--purple)}
+.contract-note-text{font-size:13px;color:#fff;background:#111;padding:8px 10px;border-radius:8px;margin-top:5px;display:block;font-style:italic;border-inline-start:3px solid var(--yellow)}
+.archive-img{width:100%;border-radius:10px;border:1px solid #444;margin-top:10px;display:block}
+.archive-item{background:#2c2c2e;padding:10px;border-radius:10px;margin-bottom:15px}
+.archive-header{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#aaa}
+.archive-folder{background:#2c2c2e;padding:15px;border-radius:12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;border-inline-start:4px solid var(--blue)}
+.archive-folder:hover{background:#3a3a3c}
+#toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(20px);background:#333;color:#fff;padding:12px 22px;border-radius:25px;font-size:14px;font-weight:bold;z-index:9999;opacity:0;transition:all .25s;pointer-events:none;max-width:90%;text-align:center}
+#toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#toast.success{background:var(--primary);color:#000}
+#toast.error{background:var(--red);color:#fff}
+#toast.info{background:var(--blue);color:#fff}
+.daily-log-section{margin-top:25px;background:var(--card);border:1px solid var(--green);border-radius:16px;padding:15px}
+.daily-log-section h3{color:var(--green);margin:0 0 10px;font-size:16px;display:flex;justify-content:space-between;align-items:center}
+.log-agent-line{font-size:11px;color:#aaa;margin:0 0 15px;text-align:center;font-family:monospace}
+.excel-log-wrapper{background:#fff;border-radius:8px;padding:12px;overflow-x:auto;direction:ltr}
+.excel-log-title{font-size:16px;font-weight:bold;color:#000;text-align:center;margin-bottom:10px;font-family:Arial,sans-serif}
+.excel-log-table{width:100%;border-collapse:collapse;font-family:Arial,sans-serif;font-size:12px;white-space:nowrap;direction:ltr}
+.excel-log-table th{background:#c6e0b4;color:#000;border:1px solid #000;padding:8px;text-align:center;font-weight:bold}
+.excel-log-table td{background:#fff;color:#000;border:1px solid #000;padding:6px 8px;text-align:center}
+.excel-log-table tr:nth-child(even) td{background:#f9f9f9}
+.log-entry-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid #333}
+.log-entry-date{font-weight:bold;color:var(--primary);font-size:14px}
+.log-delete-btn{background:transparent;border:none;color:var(--red);font-size:16px;cursor:pointer;padding:0 5px}
+.log-empty{text-align:center;color:#666;font-size:13px;padding:15px}
+.settings-area{display:none;background:#1a1a1c;border:1px dashed var(--primary);border-radius:12px;padding:15px;margin-bottom:15px}
+.settings-area h4{margin:0 0 10px;font-size:13px;color:var(--primary)}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="header">
+<button class="lang-btn" id="langBtn" onclick="toggleLang()">🌐 العربية</button>
+<h1 id="pageTitleH1">Ultimate Sales Hub 🚀</h1>
+<p id="appSubtitle">All your tools in one place</p>
+</div>
+
+<div id="tab-calc" class="tab active">
+<div class="card">
+<h3 id="t_commissionCalc">💰 Commission Calculator</h3>
+<label id="t_calcTarget">Target (Contracts)</label>
+<input type="number" id="calcTarget" value="80" oninput="calcCommission()">
+<label id="t_calcAchieved">Achieved Contracts</label>
+<input type="number" id="calcAchieved" oninput="calcCommission()">
+<label id="t_calcLimit">Achieved Limit (EGP)</label>
+<input type="number" id="calcLimit" oninput="calcCommission()">
+<div class="calc" id="calcSaveArea">
+<p style="margin:0 0 10px;font-size:14px;font-weight:bold;color:#fff;"><span id="t_targetPercent">Target %</span>: <span id="calcPercent" style="color:var(--blue)">0%</span></p>
+<div style="background:#111;padding:10px;border-radius:8px;margin-bottom:10px;">
+<p style="margin:0 0 5px;font-size:13px;color:#aaa;"><span id="t_contractRate">Contract Rate</span>: <span id="calcRate" style="color:var(--yellow);font-weight:bold;">0</span></p>
+<p style="margin:0 0 5px;font-size:13px;color:#aaa;"><span id="t_contractsTotal">Contracts Total</span>: <span id="calcContracts" style="color:var(--yellow);font-weight:bold;">0</span></p>
+<hr style="border-color:#333;margin:8px 0;">
+<p style="margin:0 0 5px;font-size:13px;color:#aaa;"><span id="t_bonusLabel">Bonus (1M = 1600)</span>: <span id="calcBonus" style="color:var(--blue);font-weight:bold;">0</span></p>
+</div>
+<p style="margin:0 0 5px;font-size:14px;color:#fff;"><span id="t_subtotal">Subtotal (before tax)</span>:<br><span id="calcSubtotal" style="color:#fff;font-size:18px;font-weight:bold;">0</span></p>
+<h3 style="margin:15px 0 0;font-size:16px;color:var(--primary);"><span id="t_totalAfterTax">Total (after 11% tax)</span>:<br><span id="calcTotal" style="font-size:22px;">0</span></h3>
+</div>
+<div class="save-row"><button class="btn btn-save" onclick="saveSection('calcSaveArea','Commission_Calc','img')" id="t_saveImage">📸 Image</button><button class="btn btn-gray" onclick="saveSection('calcSaveArea','Commission_Calc','txt')" id="t_saveNote">📝 Note</button></div>
+</div>
+<div class="card">
+<h3 id="t_personalTarget">🎯 Personal Target</h3>
+<input type="number" id="targetAmount" oninput="updateTarget()">
+<input type="number" id="achievedAmount" oninput="updateTarget()">
+<div class="progress"><div class="progress-bar" id="progressBar">0%</div></div>
+<p style="text-align:center;font-size:13px" id="targetMessage">Let's start!</p>
+</div>
+</div>
+
+<div id="tab-daily" class="tab">
+<div class="card" style="display:flex;justify-content:space-between;align-items:center">
+<div style="font-weight:bold;color:var(--primary)" id="agentDisplay">Walaa | Tanta</div>
+<div style="display:flex;gap:5px">
+<button class="btn btn-sm btn-danger" style="border-radius:8px" onclick="manualReset()" id="t_reset">Reset</button>
+<button class="btn btn-sm" style="background:transparent;color:var(--primary);border:1px solid var(--primary);border-radius:8px" onclick="toggleSettings()" id="t_settings">⚙️ Settings</button>
+</div>
+</div>
+<div class="settings-area" id="settingsArea">
+<h4 id="t_monthStart">Month Start (leave 0)</h4>
+<div class="row"><input type="number" id="startCount" oninput="saveSettings()" style="margin-bottom:0"><input type="number" id="startLimit" oninput="saveSettings()" style="margin-bottom:0"></div>
+</div>
+<div class="row">
+<input type="date" id="reportDate" style="margin-bottom:0" onchange="onReportDateChange()">
+<button class="btn" style="width:auto;padding:0 15px;margin-bottom:0;background:#333;color:#fff" onclick="copyReport()" id="t_copy">Copy</button>
+</div>
+<div class="grid" style="margin-top:15px">
+<div class="card" style="margin-bottom:0;padding:12px"><div class="stat-title" id="t_activatedToday">Activated (Today)</div><div class="stat-value" id="dailyCount">00</div></div>
+<div class="card" style="margin-bottom:0;padding:12px"><div class="stat-title" id="t_limitsToday">Limits (Today)</div><div class="stat-value" id="dailyLimits">0K</div></div>
+<div class="card" style="margin-bottom:0;padding:12px"><div class="stat-title" id="t_totalMonthly">Total Monthly</div><div class="stat-value highlight" id="monthlyCount">00</div><div id="breakdown" style="font-size:10px;color:#888;margin-top:2px;"></div></div>
+<div class="card" style="margin-bottom:0;padding:12px"><div class="stat-title" id="t_monthlyLimit">Monthly Limit</div><div class="stat-value highlight" id="monthlyLimits">0K</div></div>
+</div>
+<div class="card">
+<input type="text" id="custName">
+<div class="row"><input type="text" id="custID"><input type="number" id="custLimit"></div>
+<div class="row"><input type="text" id="custNID"><input type="text" id="custLocation" value="Tanta"></div>
+<button class="btn" onclick="addCustomer()" style="background:var(--primary);color:#000" id="t_addCustomer">+ Add Customer</button>
+</div>
+<div class="card">
+<h3 style="margin-bottom:10px;font-size:14px;color:#aaa" id="t_approvedRejected">Approved & Rejected (Manual)</h3>
+<div class="row"><input type="number" id="appCount" oninput="saveReportInputs();updateUI()"><input type="number" id="appLimit" oninput="saveReportInputs();updateUI()"></div>
+<input type="number" id="rejCount" oninput="saveReportInputs();updateUI()">
+</div>
+<div class="report-box" id="reportText"></div>
+<div class="save-row" style="margin-top:15px"><button class="btn btn-save" onclick="saveSection('reportText','Daily_Report','img')" id="t_saveImage2">📸 Image</button><button class="btn btn-gray" onclick="saveSection('reportText','Daily_Report','txt')" id="t_saveNote2">📝 Note</button></div>
+<button class="btn btn-wa" onclick="shareWhatsApp()" style="margin-top:5px" id="t_shareWA">📲 Share WhatsApp</button>
+<div class="daily-log-section">
+<h3><span id="t_deltaSalesSheet">📊 Delta Sales Sheet</span><span id="logCount" style="font-size:12px;color:#aaa;font-weight:normal">0</span></h3>
+<p class="log-agent-line" id="logAgentLine">Agent: Walaa — Auto-saved daily</p>
+<div id="dailyLogSaveArea"><div id="dailyLogList"></div></div>
+<button class="btn btn-excel" onclick="exportMonthExcel()" style="margin-top:15px;font-size:15px;padding:15px" id="t_downloadExcel">📥 Download Excel Sheet</button>
+<div class="save-row" style="margin-top:10px"><button class="btn btn-save" onclick="saveSection('dailyLogSaveArea','Daily_Log','img')" id="t_saveImage3">📸 Image</button><button class="btn btn-gray" onclick="saveSection('dailyLogSaveArea','Daily_Log','txt')" id="t_saveNote3">📝 Note</button></div>
+<button class="btn btn-wa" style="margin-top:5px" onclick="shareDailyLogWA()" id="t_sendLog">📲 Send Log (WhatsApp)</button>
+</div>
+</div>
+
+<div id="tab-contracts" class="tab">
+<div class="card" style="border:1px solid var(--purple)">
+<h3 style="color:var(--purple)" id="t_createEmail">📧 Create Email (Outlook)</h3>
+<label id="t_deliveryDate">Delivery Date</label><input type="date" id="emailDate" onchange="updateEmailPreview()">
+<div class="email-composer" id="emailSaveArea">
+<div class="email-header"><span id="t_emailDraft">📧 Email Draft</span></div>
+<div class="email-field"><span id="t_subject">Subject:</span><br><strong id="previewSubject">Submission...</strong></div>
+<div class="email-body" id="previewBody">Dears,...</div>
+</div>
+<div class="save-row"><button class="btn btn-save" onclick="saveSection('emailSaveArea','Email_Draft','img')" id="t_saveImage4">📸 Image</button><button class="btn btn-gray" onclick="saveSection('emailSaveArea','Email_Draft','txt')" id="t_saveNote4">📝 Note</button></div>
+<button class="btn btn-email" onclick="shareEmail()" style="margin-top:5px" id="t_shareEmail">📤 Share Email</button>
+<button class="btn btn-gray" onclick="copyEmailText()" style="margin-top:5px;font-size:12px" id="t_copyEmail">📋 Copy Email</button>
+</div>
+<div class="card">
+<h3 id="t_contractsDeliveryLog">📄 Contracts Delivery Log</h3>
+<div id="contractsSaveArea"><div id="contractsList"></div><div id="contractsTotalBox" style="text-align:center;margin-top:15px;padding:12px;background:#1a1a1c;border-radius:10px;font-weight:bold;border:1px dashed var(--purple)"></div></div>
+<div class="save-row" style="margin-top:10px"><button class="btn btn-save" onclick="saveSection('contractsSaveArea','Contracts_Log','img')" id="t_saveImage5">📸 Image</button><button class="btn btn-gray" onclick="saveSection('contractsSaveArea','Contracts_Log','txt')" id="t_saveNote5">📝 Note</button></div>
+<button class="btn btn-wa" style="margin-top:5px" onclick="shareContractsWA()" id="t_sendLog2">📲 Send Log (WhatsApp)</button>
+</div>
+<div class="card" style="border:1px solid var(--yellow)">
+<h3 style="color:var(--yellow)" id="t_addNewDelivery">📄 Add New Delivery</h3>
+<div class="row"><div style="flex:1"><label id="t_contractCount">Contract Count</label><input type="number" id="contractCount"></div><div style="flex:1"><label id="t_deliveryDate2">Delivery Date</label><input type="date" id="contractDate"></div></div>
+<label id="t_waybillNo">Waybill No.</label><input type="text" id="contractWaybill">
+<label id="t_receiver">Receiver</label><input type="text" id="contractReceiver">
+<label id="t_noteLabel">Note</label><input type="text" id="contractNote">
+<button class="btn" onclick="addContract()" style="background:var(--yellow);color:#000" id="t_saveDelivery">+ Save Delivery</button>
+</div>
+</div>
+
+<div id="tab-archive" class="tab">
+<div class="card" style="border:1px solid var(--blue)">
+<h3 style="color:var(--blue)" id="t_smartArchive">📸 Smart Archive</h3>
+<div class="row" style="margin-bottom:15px">
+<button class="btn btn-sm btn-excel" onclick="exportBackup()" style="flex:1;padding:10px;margin-bottom:0" id="t_downloadBackup">📤 Download Backup</button>
+<label class="btn btn-sm btn-save" style="flex:1;padding:10px;margin-bottom:0;cursor:pointer"><span id="t_restoreBackup">📥 Restore Backup</span><input type="file" id="importBackupInput" accept=".json" onchange="importBackup(event)" style="display:none"></label>
+</div>
+<div class="row" style="margin-top:10px"><input type="text" id="archiveSearch" oninput="loadArchive()" style="margin-bottom:0"></div>
+<div class="row">
+<select id="archiveFilter" onchange="loadArchive()" style="margin-bottom:0">
+<option value="all" id="t_allFolders">📁 All Folders</option>
+<option value="Commission_Calc" id="t_folderCalc">💰 Calculator</option>
+<option value="Daily_Report" id="t_folderDailyReport">📑 Daily Report</option>
+<option value="Daily_Log" id="t_folderDailyLog">📊 Daily Log</option>
+<option value="Contracts_Log" id="t_folderContracts">📄 Contracts</option>
+<option value="Email_Draft" id="t_folderEmails">📧 Emails</option>
+</select>
+<select id="autoDelete" onchange="saveAutoDelete()" style="margin-bottom:0;color:var(--yellow)">
+<option value="0" id="t_noAutoDelete">🚫 No Auto-Delete</option>
+<option value="7" id="t_deleteAfter7">🗑️ Delete after 7 days</option>
+<option value="30" id="t_deleteAfter30">🗑️ Delete after 30 days</option>
+<option value="90" id="t_deleteAfter90">🗑️ Delete after 90 days</option>
+</select>
+</div>
+<button class="btn" onclick="loadArchive()" style="background:var(--blue);color:#fff;margin-top:10px" id="t_refreshArchive">🔄 Refresh Archive</button>
+<div id="archiveList" style="margin-top:15px"></div>
+</div>
+</div>
+
+<div class="nav">
+<div class="nav-item active" onclick="switchTab('tab-calc',this)"><span>🧮</span><span id="t_navCalc">Calculator</span></div>
+<div class="nav-item" onclick="switchTab('tab-daily',this)"><span>📑</span><span id="t_navReport">Report</span></div>
+<div class="nav-item" onclick="switchTab('tab-contracts',this)"><span>📄</span><span id="t_navContracts">Contracts</span></div>
+<div class="nav-item" onclick="switchTab('tab-archive',this)"><span>📸</span><span id="t_navArchive">Archive</span></div>
+</div>
+</div>
+
+<script>
+var AGENT = { id: 'walaa', name: { en: 'Walaa', ar: 'ولاء' }, location: { en: 'Tanta', ar: 'طنطا' } };
+var PREFIX = 'saleshub_' + AGENT.id + '_';
+localforage.config({ name: PREFIX + 'archive' });
+
+var currentLang = localStorage.getItem(PREFIX + 'lang') || 'en';
+
+var i18n = {
+  en: {
+    pageTitle: 'Ultimate Sales Hub 🚀', appSubtitle: 'All your tools in one place',
+    commissionCalc: '💰 Commission Calculator', calcTarget: 'Target (Contracts)', calcAchieved: 'Achieved Contracts', calcLimit: 'Achieved Limit (EGP)',
+    targetPercent: 'Target %', contractRate: 'Contract Rate', contractsTotal: 'Contracts Total', bonusLabel: 'Bonus (1M = 1600)', subtotal: 'Subtotal (before tax)', totalAfterTax: 'Total (after 11% tax)',
+    personalTarget: '🎯 Personal Target', saveImage: '📸 Image', saveNote: '📝 Note', reset: 'Reset', settings: '⚙️ Settings', monthStart: 'Month Start (leave 0)', copy: 'Copy',
+    activatedToday: 'Activated (Today)', limitsToday: 'Limits (Today)', totalMonthly: 'Total Monthly', monthlyLimit: 'Monthly Limit', addCustomer: '+ Add Customer',
+    approvedRejected: 'Approved & Rejected (Manual)', shareWA: '📲 Share WhatsApp', deltaSalesSheet: '📊 Delta Sales Sheet', downloadExcel: '📥 Download Excel Sheet', sendLog: '📲 Send Log (WhatsApp)',
+    createEmail: '📧 Create Email (Outlook)', deliveryDate: 'Delivery Date', emailDraft: '📧 Email Draft', subject: 'Subject:', shareEmail: '📤 Share Email', copyEmail: '📋 Copy Email',
+    contractsDeliveryLog: '📄 Contracts Delivery Log', addNewDelivery: '📄 Add New Delivery', contractCount: 'Contract Count', waybillNo: 'Waybill No.', receiver: 'Receiver', noteLabel: 'Note', saveDelivery: '+ Save Delivery',
+    smartArchive: '📸 Smart Archive', downloadBackup: '📤 Download Backup', restoreBackup: '📥 Restore Backup', allFolders: '📁 All Folders', folderCalc: '💰 Calculator', folderDailyReport: '📑 Daily Report', folderDailyLog: '📊 Daily Log', folderContracts: '📄 Contracts', folderEmails: '📧 Emails',
+    noAutoDelete: '🚫 No Auto-Delete', deleteAfter7: '🗑️ Delete after 7 days', deleteAfter30: '🗑️ Delete after 30 days', deleteAfter90: '🗑️ Delete after 90 days', refreshArchive: '🔄 Refresh Archive',
+    navCalc: 'Calculator', navReport: 'Report', navContracts: 'Contracts', navArchive: 'Archive', langButton: '🌐 العربية',
+    calcTargetPH: 'e.g. 80', calcAchievedPH: 'e.g. 64', calcLimitPH: 'e.g. 1350000', targetPH: 'Target', achievedPH: 'Achieved',
+    custNamePH: 'Client Name', custIDPH: 'Account No / Code', custLimitPH: 'Limit (K)', custNIDPH: 'NID', custLocationPH: 'Location',
+    startCountPH: 'Previous Contracts', startLimitPH: 'Total Limit (K)', appCountPH: 'Appr. Count', appLimitPH: 'Appr. Limit (K)', rejCountPH: 'Rejected Count',
+    contractCountPH: 'e.g. 3', waybillPH: 'Waybill number', receiverPH: 'e.g. Aramex', notePH: 'Optional', archiveSearchPH: '🔍 Search...',
+    msgFillFields: 'Fill name, code, and limit!', msgCustAdded: 'Customer added', msgDeliverySaved: 'Delivery saved', msgEnterDateCount: 'Enter date and count!',
+    msgResetConfirm: '⚠️ Reset ALL data? This cannot be undone!', msgDeleteCust: 'Delete customer?', msgDeleteDelivery: 'Delete delivery?', msgDeleteArchive: 'Delete permanently?',
+    msgRestoreConfirm: 'Restore backup? Current archive will be merged.', msgDeleteLogPrefix: 'Delete log for',
+    msgReportCopied: 'Report copied', msgCopyFailed: 'Copy failed', msgCopied: 'Copied', msgNoLogToShare: 'No log to share', msgNoLogToExport: 'No log to export',
+    msgExcelDownloaded: 'Excel sheet downloaded ✅', msgExportError: 'Export error: ', msgPreparingImage: 'Preparing image...', msgSavedImg: 'Saved to archive (image) ✅',
+    msgSaveImgFailed: 'Failed to save image', msgNoTextToSave: 'No text to save', msgSavedNote: 'Saved to archive (note) ✅', msgSaveNoteFailed: 'Failed to save note',
+    msgPreparingBackup: 'Preparing backup...', msgBackupSuccess: 'Backup downloaded successfully', msgBackupError: 'Backup error', msgRestoreSuccess: 'Backup restored successfully! ✅', msgRestoreFailed: 'Restore failed',
+    msgDownloadStarted: 'Download started', msgDownloadFailed: 'Download failed', msgDeleted: 'Deleted', msgDeleteFailed: 'Delete failed', msgShared: 'Shared', msgOpeningWA: 'Opening WhatsApp...',
+    msgNewMonth: '📅 New month! Totals reset', msgNewDay: '☀️ New day! Total preserved', msgNoDeliveries: 'No deliveries', msgNoDeliveriesSaved: 'No deliveries saved.',
+    msgLoadedLatestMonth: 'Loaded latest recorded month', msgTargetAchieved: '🎉 Target achieved!', msgKeepGoing: '🔥 Keep going!', msgLetsStartMsg: "💪 Let's start!", msgLetsStart: "Let's start!",
+    loading: 'Loading...', archiveEmpty: 'Archive is empty.', noResults: 'No results.', viewAllFolders: '🔙 View All Folders', downloadBtn: '📥 Download', deleteBtn: '🗑️ Delete',
+    filesUnit: 'files', daysUnit: 'days', contractsUnit: 'contracts', noCustomersYet: 'No log yet — add a customer and it will appear here ✅', noCustomersTodayShort: 'No customers today',
+    breakdownStart: 'Start', breakdownPast: 'Past', breakdownToday: 'Today', breakdownContract: 'Contract', agentLabel: 'Agent', autoSavedDaily: 'Auto-saved daily',
+    totalContractsDelivered: 'Total Contracts Delivered', currency: 'EGP',
+    reportName: 'Name', reportCode: 'Code', reportLimit: 'Limit', reportDailyTitle: '*Daily*', reportTotalVisited: 'Total visited Customers', reportActivated: 'Activated Customer',
+    reportActivatedLimit: 'Activated limit', reportApproved: 'Approved', reportRejected: 'Rejected customers', reportMonthlyTitle: '*Monthly*', reportTotalContracts: 'Total Contracts', reportTotalLimit: 'Total Limit',
+    reportLocation: 'Location', reportAgent: 'Agent name', reportDateLabel: 'Date', noCustomersToday: 'No customers today',
+    emailSubject: 'Submission of Customer Contracts', emailGreeting: 'Dears,', emailBody1: 'Please note that the contracts package was sent via Aramex today', emailBody2: 'Attached are the Excel sheet of the sent contracts and the Aramex waybill.',
+    emailGovernorate: 'Governorate', emailRep: 'Sales Representative', emailConfirm: 'Kindly confirm receipt upon delivery.', emailRegards: 'Best regards,',
+    tblClientName: 'Client Name', tblAccountNo: 'Account No', tblNID: 'NID', tblAgent: 'Sales Agent Name', tblLocation: 'Activation Location', tblLimit: 'Credit Limit', tblDate: 'Activation Date', tblStatus: 'Application Status', tblActivated: 'Activated', tblNoCustomers: 'No customers',
+    dailyAutoLogTitle: '*DAILY AUTO LOG*', contractsLogTitle: '*CONTRACTS DELIVERY LOG*', dailyReportTitle: '*Daily report*'
+  },
+  ar: {
+    pageTitle: 'مركز البيع الشامل 🚀', appSubtitle: 'كل أدواتك في مكان واحد',
+    commissionCalc: '💰 حاسبة العمولة', calcTarget: 'التارجت (عدد العقود)', calcAchieved: 'عدد العقود المحققة', calcLimit: 'الليميت المحقق (جنيه)',
+    targetPercent: 'نسبة التارجت', contractRate: 'سعر العقد', contractsTotal: 'إجمالي العقود', bonusLabel: 'البونص (1 مليون = 1600)', subtotal: 'الإجمالي قبل الضريبة', totalAfterTax: 'الإجمالي بعد الضريبة (11%)',
+    personalTarget: '🎯 التارجت الشخصي', saveImage: '📸 صورة', saveNote: '📝 نوت', reset: 'تصفير', settings: '⚙️ الإعدادات', monthStart: 'بداية الشهر (يفضل تركها 0)', copy: 'نسخ',
+    activatedToday: 'المفعل اليوم', limitsToday: 'الليميت اليوم', totalMonthly: 'إجمالي الشهر', monthlyLimit: 'ليميت الشهر', addCustomer: '+ إضافة عميل',
+    approvedRejected: 'مقبول ومرفوض (يدوي)', shareWA: '📲 مشاركة واتساب', deltaSalesSheet: '📊 شيت المبيعات', downloadExcel: '📥 تحميل شيت الإكسيل', sendLog: '📲 إرسال السجل (واتساب)',
+    createEmail: '📧 إنشاء إيميل (Outlook)', deliveryDate: 'تاريخ التسليم', emailDraft: '📧 مسودة الإيميل', subject: 'الموضوع:', shareEmail: '📤 مشاركة الإيميل', copyEmail: '📋 نسخ الإيميل',
+    contractsDeliveryLog: '📄 سجل تسليمات العقود', addNewDelivery: '📄 إضافة تسليمة جديدة', contractCount: 'عدد العقود', waybillNo: 'رقم البوليصة', receiver: 'جهة الاستلام', noteLabel: 'ملاحظة', saveDelivery: '+ تسجيل وحفظ التسليمة',
+    smartArchive: '📸 الأرشيف الذكي', downloadBackup: '📤 تنزيل نسخة احتياطية', restoreBackup: '📥 استعادة نسخة', allFolders: '📁 كل المجلدات', folderCalc: '💰 الحاسبة', folderDailyReport: '📑 التقرير اليومي', folderDailyLog: '📊 السجل اليومي', folderContracts: '📄 العقود', folderEmails: '📧 الإيميلات',
+    noAutoDelete: '🚫 بدون حذف', deleteAfter7: '🗑️ حذف بعد 7 أيام', deleteAfter30: '🗑️ حذف بعد 30 يوم', deleteAfter90: '🗑️ حذف بعد 3 شهور', refreshArchive: '🔄 تحديث الأرشيف',
+    navCalc: 'الحاسبة', navReport: 'التقرير', navContracts: 'العقود', navArchive: 'الأرشيف', langButton: '🌐 English',
+    calcTargetPH: 'مثال: 80', calcAchievedPH: 'مثال: 64', calcLimitPH: 'مثال: 1350000', targetPH: 'التارجت', achievedPH: 'اللي تم تحقيقه',
+    custNamePH: 'اسم العميل', custIDPH: 'رقم الحساب / الكود', custLimitPH: 'الليميت (K)', custNIDPH: 'الرقم القومي', custLocationPH: 'المكان',
+    startCountPH: 'عدد العقود القديمة', startLimitPH: 'توتال الليميت (K)', appCountPH: 'عدد المقبول', appLimitPH: 'ليميت المقبول (K)', rejCountPH: 'عدد المرفوض',
+    contractCountPH: 'مثال: 3', waybillPH: 'رقم الأرسالية', receiverPH: 'مثال: أرامكس', notePH: 'اختياري', archiveSearchPH: '🔍 ابحث بالاسم أو التاريخ...',
+    msgFillFields: 'املأ الاسم والكود والليميت!', msgCustAdded: 'تم إضافة العميل', msgDeliverySaved: 'تم حفظ التسليمة', msgEnterDateCount: 'أدخل التاريخ والعدد!',
+    msgResetConfirm: '⚠️ تصفير الكل؟ سيتم مسح جميع السجلات!', msgDeleteCust: 'مسح العميل؟', msgDeleteDelivery: 'مسح التسليمة؟', msgDeleteArchive: 'حذف هذا الملف نهائياً؟',
+    msgRestoreConfirm: 'هل أنت متأكد من استعادة النسخة الاحتياطية؟', msgDeleteLogPrefix: 'مسح سجل يوم',
+    msgReportCopied: 'تم نسخ التقرير', msgCopyFailed: 'تعذر النسخ', msgCopied: 'تم النسخ', msgNoLogToShare: 'لا يوجد سجل', msgNoLogToExport: 'لا يوجد سجل لتصديره!',
+    msgExcelDownloaded: 'تم تحميل شيت الإكسيل بنجاح ✅', msgExportError: 'حدث خطأ في التصدير: ', msgPreparingImage: 'جاري تجهيز الصورة...', msgSavedImg: 'تم الحفظ في الأرشيف (صورة) ✅',
+    msgSaveImgFailed: 'فشل حفظ الصورة', msgNoTextToSave: 'لا يوجد نص للحفظ', msgSavedNote: 'تم الحفظ في الأرشيف (نوت) ✅', msgSaveNoteFailed: 'فشل حفظ النوت',
+    msgPreparingBackup: 'جاري تجهيز النسخة الاحتياطية...', msgBackupSuccess: 'تم تنزيل النسخة الاحتياطية بنجاح', msgBackupError: 'حدث خطأ أثناء النسخ', msgRestoreSuccess: 'تم استعادة النسخة بنجاح! ✅', msgRestoreFailed: 'فشل استعادة الملف',
+    msgDownloadStarted: 'تم بدء التنزيل', msgDownloadFailed: 'فشل التنزيل', msgDeleted: 'تم الحذف بنجاح', msgDeleteFailed: 'فشل الحذف', msgShared: 'تم فتح المشاركة', msgOpeningWA: 'فتح واتساب...',
+    msgNewMonth: '📅 شهر جديد! التوتال اتصفر', msgNewDay: '☀️ يوم جديد! التوتال محفوظ', msgNoDeliveries: 'لا يوجد تسليمات', msgNoDeliveriesSaved: 'لا توجد تسليمات محفوظة.',
+    msgLoadedLatestMonth: 'تم تحميل أحدث شهر مسجل', msgTargetAchieved: '🎉 كسرت التارجت!', msgKeepGoing: '🔥 كمّل!', msgLetsStartMsg: '💪 يلا نجيب شغل!', msgLetsStart: 'يلا ابدأ!',
+    loading: 'جاري التحميل...', archiveEmpty: 'الأرشيف فاضي حتى الآن.', noResults: 'لا يوجد نتائج مطابقة.', viewAllFolders: '🔙 عرض كل المجلدات', downloadBtn: '📥 تحميل', deleteBtn: '🗑️ حذف',
+    filesUnit: 'ملف', daysUnit: 'يوم', contractsUnit: 'عقد', noCustomersYet: 'لسه مفيش سجل — ضيف عميل وهيظهر هنا تلقائياً ✅', noCustomersTodayShort: 'لا يوجد عملاء اليوم',
+    breakdownStart: 'بداية', breakdownPast: 'سابق', breakdownToday: 'اليوم', breakdownContract: 'عقود', agentLabel: 'المندوب', autoSavedDaily: 'محفوظ تلقائياً يومياً',
+    totalContractsDelivered: 'إجمالي العقود المسلمة', currency: 'ج.م',
+    reportName: 'الاسم', reportCode: 'الكود', reportLimit: 'الليميت', reportDailyTitle: '*اليومي*', reportTotalVisited: 'إجمالي العملاء المزارين', reportActivated: 'عملاء تم تفعيلهم',
+    reportActivatedLimit: 'ليميت المفعل', reportApproved: 'مقبول', reportRejected: 'عملاء مرفوضين', reportMonthlyTitle: '*الشهري*', reportTotalContracts: 'إجمالي العقود', reportTotalLimit: 'إجمالي الليميت',
+    reportLocation: 'الموقع', reportAgent: 'اسم المندوب', reportDateLabel: 'التاريخ', noCustomersToday: 'لا يوجد عملاء اليوم',
+    emailSubject: 'تسليم عقود العملاء', emailGreeting: 'السادة،', emailBody1: 'نود إعلامكم بأنه تم إرسال حزمة العقود عبر أرامكس اليوم', emailBody2: 'مرفق شيت الإكسيل الخاص بالعقود المرسلة وبوليصة أرامكس.',
+    emailGovernorate: 'المحافظة', emailRep: 'المندوب', emailConfirm: 'يرجى تأكيد الاستلام عند التسليم.', emailRegards: 'مع أطيب التحيات،',
+    tblClientName: 'اسم العميل', tblAccountNo: 'رقم الحساب', tblNID: 'الرقم القومي', tblAgent: 'اسم المندوب', tblLocation: 'مكان التفعيل', tblLimit: 'الليميت', tblDate: 'تاريخ التفعيل', tblStatus: 'الحالة', tblActivated: 'مفعل', tblNoCustomers: 'لا يوجد عملاء',
+    dailyAutoLogTitle: '*السجل اليومي التلقائي*', contractsLogTitle: '*سجل تسليمات العقود*', dailyReportTitle: '*تقرير يومي*'
+  }
+};
+
+function t(key){ return (i18n[currentLang] && i18n[currentLang][key]) || i18n.en[key] || key; }
+
+function applyLang(){
+  document.documentElement.lang = currentLang;
+  document.documentElement.dir = (currentLang === 'ar') ? 'rtl' : 'ltr';
+  document.getElementById('pageTitleH1').textContent = t('pageTitle');
+  document.getElementById('appSubtitle').textContent = t('appSubtitle');
+  document.getElementById('langBtn').textContent = t('langButton');
+  var ids = ['commissionCalc','calcTarget','calcAchieved','calcLimit','targetPercent','contractRate','contractsTotal','bonusLabel','subtotal','totalAfterTax','personalTarget','reset','settings','monthStart','copy','activatedToday','limitsToday','totalMonthly','monthlyLimit','addCustomer','approvedRejected','shareWA','deltaSalesSheet','downloadExcel','sendLog','createEmail','deliveryDate','emailDraft','subject','shareEmail','copyEmail','contractsDeliveryLog','addNewDelivery','contractCount','waybillNo','receiver','noteLabel','saveDelivery','smartArchive','downloadBackup','restoreBackup','allFolders','folderCalc','folderDailyReport','folderDailyLog','folderContracts','folderEmails','noAutoDelete','deleteAfter7','deleteAfter30','deleteAfter90','refreshArchive','navCalc','navReport','navContracts','navArchive','saveImage','saveNote','saveImage2','saveNote2','saveImage3','saveNote3','saveImage4','saveNote4','saveImage5','saveNote5','deliveryDate2'];
+  ids.forEach(function(id){ var el = document.getElementById('t_' + id); if(el) el.textContent = t(id.replace(/[0-9]+$/,'')); });
+  var phs = { calcTarget:'calcTargetPH', calcAchieved:'calcAchievedPH', calcLimit:'calcLimitPH', targetAmount:'targetPH', achievedAmount:'achievedPH', custName:'custNamePH', custID:'custIDPH', custLimit:'custLimitPH', custNID:'custNIDPH', custLocation:'custLocationPH', startCount:'startCountPH', startLimit:'startLimitPH', appCount:'appCountPH', appLimit:'appLimitPH', rejCount:'rejCountPH', contractCount:'contractCountPH', contractWaybill:'waybillPH', contractReceiver:'receiverPH', contractNote:'notePH', archiveSearch:'archiveSearchPH' };
+  for(var k in phs){ var el = document.getElementById(k); if(el) el.placeholder = t(phs[k]); }
+  document.getElementById('agentDisplay').textContent = AGENT.name[currentLang] + ' | ' + AGENT.location[currentLang];
+  document.getElementById('logAgentLine').textContent = t('agentLabel') + ': ' + AGENT.name[currentLang] + ' — ' + t('autoSavedDaily');
+  updateTarget(); updateUI(); renderContracts(); renderDailyLog(); updateEmailPreview(); calcCommission();
+}
+
+function toggleLang(){
+  currentLang = currentLang === 'en' ? 'ar' : 'en';
+  localStorage.setItem(PREFIX + 'lang', currentLang);
+  applyLang();
+}
+
+function lsGet(k){ return localStorage.getItem(PREFIX + k); }
+function lsSet(k,v){ localStorage.setItem(PREFIX + k, v); }
+function clearStorage(){ Object.keys(localStorage).forEach(function(k){ if(k.indexOf(PREFIX) === 0) localStorage.removeItem(k); }); }
+function toast(msg,type){ type = type || 'info'; var el = document.getElementById('toast'); if(!el){ el = document.createElement('div'); el.id = 'toast'; document.body.appendChild(el); } el.textContent = msg; el.className = 'toast ' + type; void el.offsetWidth; el.classList.add('show'); clearTimeout(el._timer); el._timer = setTimeout(function(){ el.classList.remove('show'); }, 2800); }
+function esc(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function copyText(text){ if(navigator.clipboard && window.isSecureContext){ return navigator.clipboard.writeText(text).then(function(){ return true; }).catch(function(){ return legacyCopy(text); }); } return Promise.resolve(legacyCopy(text)); }
+function legacyCopy(text){ try { var ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.top = '-9999px'; document.body.appendChild(ta); ta.select(); var ok = document.execCommand('copy'); document.body.removeChild(ta); return ok; } catch(e){ return false; } }
+function fmtPhone(p){ p = (p||'').toString().replace(/[^0-9]/g,''); if(p.indexOf('00') === 0) p = p.substring(2); if(p.indexOf('0') === 0) p = '20' + p.substring(1); return p; }
+function openWA(phone,text){ var clean = fmtPhone(phone); var enc = encodeURIComponent(text||''); var url = clean ? ('https://wa.me/' + clean + '?text=' + enc) : ('https://wa.me/?text=' + enc); var a = document.createElement('a'); a.href = url; a.target = '_blank'; a.rel = 'noopener noreferrer'; document.body.appendChild(a); a.click(); document.body.removeChild(a); toast(t('msgOpeningWA'),'success'); }
+function downloadFile(content,filename,mime){ try { var blob = (content instanceof Blob) ? content : new Blob([content],{type:mime||'text/plain;charset=utf-8'}); var url = URL.createObjectURL(blob); var a = document.createElement('a'); a.href = url; a.download = filename; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(function(){ URL.revokeObjectURL(url); },2000); return true; } catch(e){ return false; } }
+function switchTab(id,el){ document.querySelectorAll('.tab').forEach(function(x){ x.classList.remove('active'); }); document.querySelectorAll('.nav-item').forEach(function(n){ n.classList.remove('active'); }); document.getElementById(id).classList.add('active'); el.classList.add('active'); if(id === 'tab-archive') loadArchive(); if(id === 'tab-daily') updateUI(); }
+
+function saveAutoDelete(){ lsSet('archiveAutoDelete', document.getElementById('autoDelete').value); }
+async function runAutoCleanup(){ var days = parseInt(lsGet('archiveAutoDelete')) || 0; if(days === 0) return; var cutoff = Date.now() - (days*24*60*60*1000); try { var keys = await localforage.keys(); for(var i=0;i<keys.length;i++){ var parts = keys[i].split('_'); var ts = parseInt(parts[parts.length-2]); if(ts && ts < cutoff) await localforage.removeItem(keys[i]); } } catch(e){} }
+async function saveSection(id,prefix,format){ if(format === 'img') return saveImg(id,prefix); if(format === 'txt') return saveTxt(id,prefix); }
+async function saveImg(id,prefix){
+  var el = document.getElementById(id); if(!el) return;
+  toast(t('msgPreparingImage'),'info');
+  var oO = el.style.overflow, oH = el.style.height, oW = el.style.width, oMW = el.style.maxWidth;
+  el.style.overflow = 'visible'; el.style.height = 'auto'; el.style.width = 'max-content'; el.style.maxWidth = 'none';
+  var scrolls = el.querySelectorAll('.excel-log-wrapper');
+  var oSS = [];
+  scrolls.forEach(function(item){ oSS.push({w:item.style.width, mw:item.style.maxWidth, o:item.style.overflow}); item.style.width = 'max-content'; item.style.maxWidth = 'none'; item.style.overflow = 'visible'; });
+  try {
+    var canvas = await html2canvas(el, {backgroundColor:'#1c1c1e',scale:2,useCORS:true});
+    el.style.overflow = oO; el.style.height = oH; el.style.width = oW; el.style.maxWidth = oMW;
+    scrolls.forEach(function(item,i){ item.style.width = oSS[i].w; item.style.maxWidth = oSS[i].mw; item.style.overflow = oSS[i].o; });
+    canvas.toBlob(async function(blob){
+      var d = new Date();
+      var ds = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+      var tm = String(d.getHours()).padStart(2,'0') + '-' + String(d.getMinutes()).padStart(2,'0');
+      var ts = Date.now();
+      var file = new File([blob], prefix + '_' + ds + '_' + tm + '.png', {type:'image/png'});
+      await localforage.setItem(prefix + '_' + ts + '_img', file);
+      toast(t('msgSavedImg'),'success');
+    }, 'image/png');
+  } catch(err){ el.style.overflow = oO; el.style.height = oH; el.style.width = oW; el.style.maxWidth = oMW; toast(t('msgSaveImgFailed'),'error'); }
+}
+async function saveTxt(id,prefix){
+  var el = document.getElementById(id); if(!el) return;
+  var text = el.innerText || el.textContent;
+  if(!text.trim()){ toast(t('msgNoTextToSave'),'error'); return; }
+  try {
+    var ts = Date.now(); var d = new Date(ts);
+    var ds = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    var tm = String(d.getHours()).padStart(2,'0') + '-' + String(d.getMinutes()).padStart(2,'0');
+    var content = 'Date: ' + ds + ' ' + tm + '\n\n' + text;
+    var file = new File([new Blob([content],{type:'text/plain;charset=utf-8'})], prefix + '_' + ds + '_' + tm + '.txt', {type:'text/plain'});
+    await localforage.setItem(prefix + '_' + ts + '_txt', file);
+    toast(t('msgSavedNote'),'success');
+  } catch(err){ toast(t('msgSaveNoteFailed'),'error'); }
+}
+async function exportBackup(){ toast(t('msgPreparingBackup'),'info'); try {
+  var keys = await localforage.keys(); var backupData = {files:[]};
+  for(var i=0;i<keys.length;i++){
+    var file = await localforage.getItem(keys[i]);
+    if(file){
+      if(file.type === 'text/plain'){ var text = await file.text(); backupData.files.push({key:keys[i],name:file.name,type:file.type,content:text,isText:true}); }
+      else { var b64 = await new Promise(function(res){ var r = new FileReader(); r.onload = function(e){ res(e.target.result); }; r.readAsDataURL(file); }); backupData.files.push({key:keys[i],name:file.name,type:file.type,content:b64,isText:false}); }
+    }
+  }
+  downloadFile(new Blob([JSON.stringify(backupData)],{type:'application/json'}), 'Backup_' + AGENT.name.en + '_' + new Date().toISOString().split('T')[0] + '.json', 'application/json');
+  toast(t('msgBackupSuccess'),'success');
+} catch(e){ toast(t('msgBackupError'),'error'); } }
+async function importBackup(event){
+  var file = event.target.files[0]; if(!file) return;
+  if(!confirm(t('msgRestoreConfirm'))) return;
+  var reader = new FileReader();
+  reader.onload = async function(e){
+    try {
+      var data = JSON.parse(e.target.result);
+      if(!data.files) throw new Error('invalid');
+      for(var i=0;i<data.files.length;i++){
+        var item = data.files[i]; var blob;
+        if(item.isText){ blob = new File([item.content],item.name,{type:item.type}); }
+        else { var res = await fetch(item.content); var b = await res.blob(); blob = new File([b],item.name,{type:item.type}); }
+        await localforage.setItem(item.key, blob);
+      }
+      toast(t('msgRestoreSuccess'),'success');
+      loadArchive();
+    } catch(err){ toast(t('msgRestoreFailed'),'error'); }
+  };
+  reader.readAsText(file); event.target.value = '';
+}
+async function loadArchive(){
+  var listC = document.getElementById('archiveList');
+  listC.innerHTML = '<p style="text-align:center;color:#aaa;">' + t('loading') + '</p>';
+  var search = (document.getElementById('archiveSearch').value||'').trim().toLowerCase();
+  var filter = document.getElementById('archiveFilter').value;
+  document.getElementById('autoDelete').value = lsGet('archiveAutoDelete') || '0';
+  try {
+    var keys = await localforage.keys();
+    if(!keys || keys.length === 0){ listC.innerHTML = '<p style="text-align:center;color:#666;font-size:13px;">' + t('archiveEmpty') + '</p>'; return; }
+    var items = [];
+    for(var i=0;i<keys.length;i++){
+      var file = await localforage.getItem(keys[i]); if(!file) continue;
+      var parts = keys[i].split('_');
+      var format = parts.pop();
+      var ts = parseInt(parts.pop());
+      var cat = parts.join('_');
+      if(!isNaN(format) && !ts){ ts = parseInt(format); format = 'img'; }
+      if(!ts) continue;
+      var dateObj = new Date(ts);
+      var displayDate = dateObj.toLocaleDateString(currentLang === 'ar' ? 'ar-EG' : 'en-GB') + ' ' + dateObj.toLocaleTimeString(currentLang === 'ar' ? 'ar-EG' : 'en-GB',{hour:'2-digit',minute:'2-digit'});
+      var txt = '';
+      if(format === 'txt'){ try { txt = await file.text(); } catch(e){} }
+      items.push({key:keys[i],file:file,cat:cat,ts:ts,displayDate:displayDate,name:file.name,format:format,txt:txt});
+    }
+    var filtered = items.filter(function(item){
+      var matchCat = (filter === 'all') || (item.cat === filter);
+      var matchSearch = (search === '') || item.cat.toLowerCase().indexOf(search) !== -1 || item.name.toLowerCase().indexOf(search) !== -1 || (item.txt && item.txt.toLowerCase().indexOf(search) !== -1);
+      return matchCat && matchSearch;
+    });
+    if(filtered.length === 0){ listC.innerHTML = '<p style="text-align:center;color:#666;font-size:13px;">' + t('noResults') + '</p>'; return; }
+    filtered.sort(function(a,b){ return b.ts - a.ts; });
+    if(filter === 'all' && !search){
+      listC.innerHTML = '';
+      var grouped = {};
+      filtered.forEach(function(item){ if(!grouped[item.cat]) grouped[item.cat] = []; grouped[item.cat].push(item); });
+      for(var catName in grouped){
+        var c = grouped[catName];
+        var div = document.createElement('div');
+        div.className = 'archive-folder';
+        div.innerHTML = '<div style="display:flex;align-items:center;gap:12px;"><span style="font-size:24px;">📁</span><div><div style="font-weight:bold;font-size:15px;">' + catName.replace(/_/g,' ') + '</div><div style="color:#aaa;font-size:12px;">' + c.length + ' ' + t('filesUnit') + '</div></div></div><span style="font-size:18px;color:#666;">‹</span>';
+        div.onclick = (function(cn){ return function(){ document.getElementById('archiveFilter').value = cn; loadArchive(); }; })(catName);
+        listC.appendChild(div);
+      }
+    } else {
+      listC.innerHTML = '<button class="btn btn-sm btn-gray" onclick="document.getElementById(\'archiveFilter\').value=\'all\';document.getElementById(\'archiveSearch\').value=\'\';loadArchive();" style="margin-bottom:15px;width:100%;">' + t('viewAllFolders') + '</button>';
+      for(var j=0;j<filtered.length;j++){
+        var item = filtered[j];
+        var url = URL.createObjectURL(item.file);
+        var preview = '';
+        if(item.format === 'img') preview = '<img src="' + url + '" class="archive-img" onclick="window.open(\'' + url + '\',\'_blank\')">';
+        else if(item.format === 'txt'){ var tt = item.txt.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); preview = '<div style="background:#111;padding:15px;border-radius:8px;font-family:monospace;color:#eee;font-size:13px;border:1px solid #333;white-space:pre-wrap;max-height:250px;overflow-y:auto;">' + tt + '</div>'; }
+        var div2 = document.createElement('div');
+        div2.className = 'archive-item';
+        div2.innerHTML = '<div class="archive-header" style="margin-bottom:8px;"><span style="font-weight:bold;color:#fff;">' + item.cat.replace(/_/g,' ') + '</span><span style="color:#aaa;font-size:11px;">' + item.displayDate + '</span></div>' + preview + '<div class="row" style="margin-top:10px;margin-bottom:0;"><button class="btn btn-sm btn-gray" onclick="downloadLocal(\'' + item.key + '\',\'' + item.name + '\')" style="margin-bottom:0;">' + t('downloadBtn') + '</button><button class="btn btn-sm btn-danger" onclick="deleteLocal(\'' + item.key + '\')" style="margin-bottom:0;">' + t('deleteBtn') + '</button></div>';
+        listC.appendChild(div2);
+      }
+    }
+  } catch(err){ listC.innerHTML = '<p style="text-align:center;color:var(--red);">' + err.message + '</p>'; }
+}
+async function downloadLocal(key,name){
+  try { var file = await localforage.getItem(key); if(!file) return; var url = URL.createObjectURL(file); var a = document.createElement('a'); a.href = url; a.download = name; document.body.appendChild(a); a.click(); document.body.removeChild(a); setTimeout(function(){ URL.revokeObjectURL(url); }, 2000); toast(t('msgDownloadStarted'),'success'); } catch(e){ toast(t('msgDownloadFailed'),'error'); }
+}
+async function deleteLocal(key){
+  if(!confirm(t('msgDeleteArchive'))) return;
+  try { await localforage.removeItem(key); toast(t('msgDeleted'),'success'); loadArchive(); } catch(e){ toast(t('msgDeleteFailed'),'error'); }
+}
+
+function calcCommission(){
+  var tg = parseFloat(document.getElementById('calcTarget').value) || 80;
+  var a = parseFloat(document.getElementById('calcAchieved').value) || 0;
+  var l = parseFloat(document.getElementById('calcLimit').value) || 0;
+  var pct = (a/tg) * 100;
+  var rate = 0;
+  if(pct >= 100) rate = 60; else if(pct >= 90) rate = 40; else if(pct >= 80) rate = 25;
+  var ct = a * rate;
+  var bonus = (l/1000000) * 1600;
+  var sub = ct + bonus;
+  var total = sub * 1.11;
+  var cur = t('currency');
+  document.getElementById('calcPercent').innerText = pct.toFixed(1) + '%';
+  document.getElementById('calcRate').innerText = rate + ' ' + cur;
+  document.getElementById('calcContracts').innerText = ct.toLocaleString() + ' ' + cur;
+  document.getElementById('calcBonus').innerText = Math.round(bonus).toLocaleString() + ' ' + cur;
+  document.getElementById('calcSubtotal').innerText = Math.round(sub).toLocaleString() + ' ' + cur;
+  document.getElementById('calcTotal').innerText = Math.round(total).toLocaleString() + ' ' + cur;
+}
+function updateTarget(){
+  var tg = parseFloat(document.getElementById('targetAmount').value) || 0;
+  var a = parseFloat(document.getElementById('achievedAmount').value) || 0;
+  lsSet('target', tg); lsSet('achieved', a);
+  var bar = document.getElementById('progressBar'); var msg = document.getElementById('targetMessage');
+  if(tg > 0){ var pct = Math.min((a/tg)*100, 100); bar.style.width = pct + '%'; bar.innerText = Math.round(pct) + '%'; if(pct >= 100) msg.innerText = t('msgTargetAchieved'); else if(pct >= 50) msg.innerText = t('msgKeepGoing'); else msg.innerText = t('msgLetsStartMsg'); }
+  else { bar.style.width = '0%'; bar.innerText = '0%'; msg.innerText = t('msgLetsStart'); }
+}
+
+function toggleSettings(){ var a = document.getElementById('settingsArea'); a.style.display = a.style.display === 'block' ? 'none' : 'block'; }
+function saveSettings(){ lsSet('baseCount', parseInt(document.getElementById('startCount').value)||0); lsSet('baseLimit', parseInt(document.getElementById('startLimit').value)||0); updateUI(); }
+function saveReportInputs(){ lsSet('appCount', document.getElementById('appCount').value||''); lsSet('appLimit', document.getElementById('appLimit').value||''); lsSet('rejCount', document.getElementById('rejCount').value||''); }
+
+function checkDateReset(){
+  var now = new Date(); var dStr = now.toISOString().split('T')[0]; var mStr = dStr.substring(0,7);
+  var sd = lsGet('lastActiveDate'), sm = lsGet('lastActiveMonth');
+  if(!sd || !sm){ lsSet('lastActiveDate', dStr); lsSet('lastActiveMonth', mStr); return; }
+  if(sm !== mStr){ lsSet('baseCount',0); lsSet('baseLimit',0); lsSet('dailyCustomers','[]'); setTimeout(function(){ toast(t('msgNewMonth'),'info'); }, 500); }
+  else if(sd !== dStr){ lsSet('dailyCustomers','[]'); setTimeout(function(){ toast(t('msgNewDay'),'info'); }, 500); }
+  lsSet('lastActiveDate', dStr); lsSet('lastActiveMonth', mStr);
+}
+var dailyCustomers = [];
+function formatK(num){ var m = Math.floor(num/1000), k = num%1000; if(m === 0) return num + 'K'; if(k === 0) return m + 'M'; return m + 'M' + k + 'K'; }
+function onReportDateChange(){
+  var date = document.getElementById('reportDate').value; if(!date) return;
+  var log = JSON.parse(lsGet('dailyLog_v1')) || [];
+  var entry = null;
+  for(var i=0;i<log.length;i++){ if(log[i].date === date){ entry = log[i]; break; } }
+  if(entry){
+    dailyCustomers = (entry.customers||[]).map(function(c){ return {name:c.name, id:c.code, nid:c.nid||'', location:c.location||AGENT.location[currentLang], limit:c.limit}; });
+    document.getElementById('appCount').value = (entry.appC && entry.appC !== '0') ? entry.appC : '';
+    document.getElementById('appLimit').value = (entry.appL && entry.appL !== '0') ? entry.appL : '';
+    document.getElementById('rejCount').value = (entry.rejC && entry.rejC !== '0') ? entry.rejC : '';
+  } else { dailyCustomers = []; document.getElementById('appCount').value = ''; document.getElementById('appLimit').value = ''; document.getElementById('rejCount').value = ''; }
+  lsSet('dailyCustomers', JSON.stringify(dailyCustomers));
+  saveReportInputs(); updateUI();
+}
+function addCustomer(){
+  var name = document.getElementById('custName').value.trim();
+  var id = document.getElementById('custID').value.trim();
+  var nid = document.getElementById('custNID').value.trim();
+  var loc = document.getElementById('custLocation').value.trim() || AGENT.location[currentLang];
+  var limit = parseInt(document.getElementById('custLimit').value);
+  if(!name || !id || isNaN(limit)){ toast(t('msgFillFields'),'error'); return; }
+  dailyCustomers = JSON.parse(lsGet('dailyCustomers')) || [];
+  dailyCustomers.push({name:name, id:id, nid:nid, location:loc, limit:limit});
+  lsSet('dailyCustomers', JSON.stringify(dailyCustomers));
+  ['custName','custID','custNID','custLimit'].forEach(function(i){ document.getElementById(i).value = ''; });
+  updateUI(); toast(t('msgCustAdded'),'success');
+}
+function deleteCustomer(i){ if(confirm(t('msgDeleteCust'))){ dailyCustomers.splice(i,1); lsSet('dailyCustomers', JSON.stringify(dailyCustomers)); updateUI(); } }
+function manualReset(){ if(confirm(t('msgResetConfirm'))){ clearStorage(); location.reload(); } }
+
+function updateUI(){
+  dailyCustomers = JSON.parse(lsGet('dailyCustomers')) || [];
+  var dCount = dailyCustomers.length;
+  var dLimit = dailyCustomers.reduce(function(s,c){ return s + c.limit; }, 0);
+  var selDate = document.getElementById('reportDate').value || new Date().toISOString().split('T')[0];
+  var mStr = selDate.substring(0,7);
+  var log = JSON.parse(lsGet('dailyLog_v1')) || [];
+  var mLCount = 0, mLLimit = 0;
+  log.forEach(function(e){ if(e.date.indexOf(mStr) === 0 && e.date !== selDate){ mLCount += (e.dCount||0); mLLimit += (e.dLimit||0); } });
+  var sCount = parseInt(document.getElementById('startCount').value) || 0;
+  var sLimit = parseInt(document.getElementById('startLimit').value) || 0;
+  var manualC = 0;
+  try { var cl = JSON.parse(lsGet('contracts_v6')) || []; manualC = cl.filter(function(c){ return c.date && c.date.indexOf(mStr) === 0; }).reduce(function(s,c){ return s + (c.count||0); }, 0); } catch(e){}
+  var totalCount = sCount + mLCount + dCount + manualC;
+  var totalLimit = sLimit + mLLimit + dLimit;
+  document.getElementById('dailyCount').innerText = String(dCount).padStart(2,'0');
+  document.getElementById('dailyLimits').innerText = dLimit + 'K';
+  document.getElementById('monthlyCount').innerText = totalCount;
+  document.getElementById('monthlyLimits').innerText = formatK(totalLimit);
+  document.getElementById('breakdown').innerText = '(' + t('breakdownStart') + ': ' + sCount + ' + ' + t('breakdownPast') + ': ' + mLCount + ' + ' + t('breakdownToday') + ': ' + dCount + ' + ' + t('breakdownContract') + ': ' + manualC + ')';
+  var listHtml = '';
+  if(dailyCustomers.length === 0) listHtml = '<div style="text-align:center;color:#888;margin-bottom:20px;">' + t('noCustomersTodayShort') + '</div>';
+  else dailyCustomers.forEach(function(c,i){ var n = String(i+1).padStart(2,'0'); listHtml += '<div class="report-item"><div class="report-info"><span class="report-name">' + n + '. ' + t('reportName') + ': ' + c.name + '</span><span class="report-detail">' + t('reportCode') + ': ' + c.id + '</span><span class="report-detail" style="color:var(--primary);">' + t('reportLimit') + ': ' + c.limit + 'K</span></div><button class="report-delete-btn" onclick="deleteCustomer(' + i + ')">✖</button></div>'; });
+  var appC = document.getElementById('appCount').value || '00';
+  var appL = document.getElementById('appLimit').value || '00';
+  var rejC = document.getElementById('rejCount').value || '00';
+  var summary = '<div class="report-divider"></div><div class="report-section-title">' + t('reportDailyTitle') + '</div><div class="report-summary-line">' + t('reportTotalVisited') + ': ' + String(dCount).padStart(2,'0') + '</div><div class="report-summary-line">' + t('reportActivated') + ': ' + String(dCount).padStart(2,'0') + '</div><div class="report-summary-line">' + t('reportActivatedLimit') + ': ' + dLimit + 'K</div><div class="report-summary-line">' + t('reportApproved') + ': ' + appC + ' (' + appL + 'K)</div><div class="report-summary-line">' + t('reportRejected') + ': ' + rejC + '</div><div class="report-divider"></div><div class="report-section-title">' + t('reportMonthlyTitle') + '</div><div class="report-summary-line">' + t('reportTotalContracts') + ': ' + totalCount + '</div><div class="report-summary-line">' + t('reportTotalLimit') + ': ' + formatK(totalLimit) + '</div>';
+  document.getElementById('reportText').innerHTML = listHtml + summary;
+  saveDailyLog();
+}
+function getCleanText(){
+  var dCount = dailyCustomers.length;
+  var dLimit = dailyCustomers.reduce(function(s,c){ return s + c.limit; }, 0);
+  var selDate = document.getElementById('reportDate').value || new Date().toISOString().split('T')[0];
+  var mStr = selDate.substring(0,7);
+  var log = JSON.parse(lsGet('dailyLog_v1')) || [];
+  var mLCount = 0, mLLimit = 0;
+  log.forEach(function(e){ if(e.date.indexOf(mStr) === 0 && e.date !== selDate){ mLCount += (e.dCount||0); mLLimit += (e.dLimit||0); } });
+  var sCount = parseInt(document.getElementById('startCount').value) || 0;
+  var sLimit = parseInt(document.getElementById('startLimit').value) || 0;
+  var manualC = 0;
+  try { var cl = JSON.parse(lsGet('contracts_v6')) || []; manualC = cl.filter(function(c){ return c.date && c.date.indexOf(mStr) === 0; }).reduce(function(s,c){ return s + (c.count||0); }, 0); } catch(e){}
+  var totalCount = sCount + mLCount + dCount + manualC;
+  var totalLimit = sLimit + mLLimit + dLimit;
+  var text = t('dailyReportTitle') + '\n\n' + t('reportLocation') + ': ' + AGENT.location[currentLang].toUpperCase() + '\n' + t('reportAgent') + ': ' + AGENT.name[currentLang] + '\n' + t('reportDateLabel') + ': ' + selDate + '\n_______________________\n\n';
+  if(dailyCustomers.length === 0) text += t('noCustomersToday') + '\n\n';
+  else dailyCustomers.forEach(function(c,i){ var n = String(i+1).padStart(2,'0'); text += n + '. ' + t('reportName') + ': ' + c.name + '\n    ' + t('reportCode') + ': ' + c.id + '\n    ' + t('reportLimit') + ': ' + c.limit + 'K\n\n'; });
+  text += '_______________________\n\n';
+  var appC = document.getElementById('appCount').value || '00';
+  var appL = document.getElementById('appLimit').value || '00';
+  var rejC = document.getElementById('rejCount').value || '00';
+  text += t('reportDailyTitle') + '\n' + t('reportTotalVisited') + ': ' + String(dCount).padStart(2,'0') + '\n' + t('reportActivated') + ': ' + String(dCount).padStart(2,'0') + '\n' + t('reportActivatedLimit') + ': ' + dLimit + 'K\n' + t('reportApproved') + ': ' + appC + ' (' + appL + 'K)\n' + t('reportRejected') + ': ' + rejC + '\n_______________________\n\n';
+  text += t('reportMonthlyTitle') + '\n' + t('reportTotalContracts') + ': ' + totalCount + '\n' + t('reportTotalLimit') + ': ' + formatK(totalLimit);
+  return text;
+}
+function copyReport(){ copyText(getCleanText()).then(function(ok){ toast(ok ? t('msgReportCopied') : t('msgCopyFailed'), ok ? 'success' : 'error'); }); }
+function shareWhatsApp(){ openWA('', getCleanText()); }
+function saveDailyLog(){
+  try {
+    var date = document.getElementById('reportDate').value || new Date().toISOString().split('T')[0];
+    var dCust = JSON.parse(lsGet('dailyCustomers')) || [];
+    var appC = document.getElementById('appCount').value;
+    var rejC = document.getElementById('rejCount').value;
+    var log = JSON.parse(lsGet('dailyLog_v1')) || [];
+    var idx = -1; for(var i=0;i<log.length;i++){ if(log[i].date === date){ idx = i; break; } }
+    if(dCust.length === 0 && !appC && !rejC){
+      if(idx !== -1){ log.splice(idx,1); lsSet('dailyLog_v1', JSON.stringify(log)); }
+      renderDailyLog(); return;
+    }
+    var snap = {date:date, agent:AGENT.name.en, customers:dCust.map(function(c){ return {name:c.name, code:c.id, nid:c.nid||'', location:c.location||AGENT.location.en, limit:c.limit}; }), appC:appC||'0', appL:document.getElementById('appLimit').value||'0', rejC:rejC||'0', dCount:dCust.length, dLimit:dCust.reduce(function(s,c){ return s + c.limit; }, 0), sCount:parseInt(document.getElementById('startCount').value)||0, sLimit:parseInt(document.getElementById('startLimit').value)||0, savedAt:Date.now()};
+    if(idx !== -1) log[idx] = snap; else log.push(snap);
+    log.sort(function(a,b){ return b.date.localeCompare(a.date); });
+    lsSet('dailyLog_v1', JSON.stringify(log));
+    renderDailyLog();
+  } catch(e){ console.error(e); }
+}
+function renderDailyLog(){
+  var log = JSON.parse(lsGet('dailyLog_v1')) || [];
+  var container = document.getElementById('dailyLogList');
+  var countEl = document.getElementById('logCount');
+  if(!container) return;
+  if(countEl) countEl.textContent = log.length + ' ' + t('daysUnit');
+  if(log.length === 0){ container.innerHTML = '<p class="log-empty">' + t('noCustomersYet') + '</p>'; return; }
+  var html = '';
+  log.forEach(function(entry){
+    var dObj = new Date(entry.date);
+    var mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var mStr = isNaN(dObj.getTime()) ? '' : mn[dObj.getMonth()] + ' ' + dObj.getFullYear();
+    var rows = '';
+    if(!entry.customers || entry.customers.length === 0) rows = '<tr><td colspan="8" style="text-align:center;color:#888;padding:10px;">' + t('tblNoCustomers') + '</td></tr>';
+    else entry.customers.forEach(function(c){ rows += '<tr><td>' + esc(c.name) + '</td><td>' + esc(String(c.code)) + '</td><td>' + esc(c.nid||'') + '</td><td>' + entry.agent + '</td><td>' + esc(c.location||AGENT.location.en) + '</td><td>' + c.limit + 'K</td><td>' + entry.date + '</td><td>' + t('tblActivated') + '</td></tr>'; });
+    html += '<div class="log-entry" style="margin-bottom:20px;"><div class="log-entry-header"><div class="log-entry-date">📅 ' + entry.date + '</div><button class="log-delete-btn" onclick="deleteLogEntry(\'' + entry.date + '\')">🗑️</button></div><div class="excel-log-wrapper"><div class="excel-log-title">Delta Sales Sheet ' + mStr + '</div><table class="excel-log-table"><thead><tr><th>' + t('tblClientName') + '</th><th>' + t('tblAccountNo') + '</th><th>' + t('tblNID') + '</th><th>' + t('tblAgent') + '</th><th>' + t('tblLocation') + '</th><th>' + t('tblLimit') + '</th><th>' + t('tblDate') + '</th><th>' + t('tblStatus') + '</th></tr></thead><tbody>' + rows + '</tbody></table></div></div>';
+  });
+  container.innerHTML = html;
+}
+function deleteLogEntry(date){ if(!confirm(t('msgDeleteLogPrefix') + ' ' + date + ' ?')) return; var log = JSON.parse(lsGet('dailyLog_v1')) || []; log = log.filter(function(l){ return l.date !== date; }); lsSet('dailyLog_v1', JSON.stringify(log)); renderDailyLog(); updateUI(); toast(t('msgDeleted'),'success'); }
+function shareDailyLogWA(){
+  var log = JSON.parse(lsGet('dailyLog_v1')) || [];
+  if(log.length === 0){ toast(t('msgNoLogToShare'),'error'); return; }
+  var text = t('dailyAutoLogTitle') + '\n' + t('agentLabel') + ': ' + AGENT.name[currentLang] + '\n\n';
+  log.forEach(function(entry){
+    text += '━━━━━━━━━━━━━━\n📅 ' + entry.date + '\n━━━━━━━━━━━━━━\n';
+    if(!entry.customers || entry.customers.length === 0) text += t('noCustomersToday') + '\n';
+    else entry.customers.forEach(function(c){ text += t('reportName') + ': ' + c.name + '\n' + t('reportCode') + ': ' + c.code + '\n' + t('reportLimit') + ': ' + c.limit + 'K\n----------------\n'; });
+    text += '\n' + t('breakdownToday') + ': ' + entry.dCount + ' | ' + entry.dLimit + 'K\n\n';
+  });
+  openWA('', text);
+}
+function exportMonthExcel(){
+  try {
+    var log = JSON.parse(lsGet('dailyLog_v1')) || [];
+    if(log.length === 0){ toast(t('msgNoLogToExport'),'error'); return; }
+    var tgtM = document.getElementById('reportDate').value.substring(0,7) || new Date().toISOString().substring(0,7);
+    var mLogs = log.filter(function(l){ return l.date.indexOf(tgtM) === 0; });
+    if(mLogs.length === 0){ mLogs = log.slice(); tgtM = log[0].date.substring(0,7); toast(t('msgLoadedLatestMonth'),'info'); }
+    var dObj = new Date(tgtM + '-01T00:00:00');
+    var mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    var myStr = mn[dObj.getMonth()] + ' ' + dObj.getFullYear();
+    var aoa = [['Delta Sales Sheet ' + myStr], [t('tblClientName'),t('tblAccountNo'),t('tblNID'),t('tblAgent'),t('tblLocation'),t('tblLimit'),t('tblDate'),t('tblStatus')]];
+    mLogs.sort(function(a,b){ return a.date.localeCompare(b.date); });
+    mLogs.forEach(function(entry){ if(entry.customers && entry.customers.length > 0) entry.customers.forEach(function(c){ aoa.push([c.name,c.code,c.nid||'',entry.agent||AGENT.name.en,c.location||AGENT.location.en,c.limit+'K',entry.date,t('tblActivated')]); }); });
+    var ws = XLSX.utils.aoa_to_sheet(aoa);
+    ws['!merges'] = [{s:{r:0,c:0},e:{r:0,c:7}}];
+    ws['!cols'] = [{wch:25},{wch:15},{wch:20},{wch:20},{wch:20},{wch:12},{wch:15},{wch:18}];
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, myStr.replace(' ','_'));
+    XLSX.writeFile(wb, 'Delta Sales Sheet ' + myStr + '.xlsx');
+    toast(t('msgExcelDownloaded'),'success');
+  } catch(e){ toast(t('msgExportError') + e.message,'error'); }
+}
+
+var contracts = [];
+function addContract(){
+  var count = parseInt(document.getElementById('contractCount').value);
+  var date = document.getElementById('contractDate').value;
+  var note = document.getElementById('contractNote').value.trim();
+  var waybill = document.getElementById('contractWaybill').value.trim();
+  var receiver = document.getElementById('contractReceiver').value.trim();
+  if(!count || !date){ toast(t('msgEnterDateCount'),'error'); return; }
+  contracts = JSON.parse(lsGet('contracts_v6')) || [];
+  contracts.unshift({id:Date.now(), count:count, date:date, note:note, waybill:waybill, receiver:receiver});
+  lsSet('contracts_v6', JSON.stringify(contracts));
+  ['contractCount','contractNote','contractWaybill','contractReceiver'].forEach(function(i){ document.getElementById(i).value = ''; });
+  renderContracts(); updateUI(); toast(t('msgDeliverySaved'),'success');
+}
+function deleteContract(id){ if(confirm(t('msgDeleteDelivery'))){ contracts = contracts.filter(function(c){ return c.id !== id; }); lsSet('contracts_v6', JSON.stringify(contracts)); renderContracts(); updateUI(); } }
+function renderContracts(){
+  contracts = JSON.parse(lsGet('contracts_v6')) || [];
+  var list = document.getElementById('contractsList'); list.innerHTML = ''; var total = 0;
+  if(contracts.length === 0) list.innerHTML = '<p style="text-align:center;color:#666;font-size:13px;padding:10px;">' + t('msgNoDeliveriesSaved') + '</p>';
+  else contracts.forEach(function(c){
+    total += c.count;
+    var noteH = c.note ? '<div class="contract-note-text">📝 ' + c.note + '</div>' : '';
+    var wbH = c.waybill ? '<div style="font-size:12px;color:#fff;margin-top:3px;">📦 ' + c.waybill + '</div>' : '';
+    var rcvH = c.receiver ? '<div style="font-size:12px;color:#fff;margin-top:3px;">📍 ' + c.receiver + '</div>' : '';
+    list.innerHTML += '<div class="contract-card"><div class="contract-info"><div class="contract-header-row"><span class="contract-date">📅 ' + c.date + '</span><span class="contract-count">' + c.count + ' ' + t('contractsUnit') + '</span></div>' + wbH + rcvH + noteH + '</div><button class="btn btn-danger btn-sm" style="margin-inline-start:10px;padding:6px 10px;" onclick="deleteContract(' + c.id + ')">🗑️</button></div>';
+  });
+  document.getElementById('contractsTotalBox').innerHTML = t('totalContractsDelivered') + ': <span style="color:var(--primary);font-size:18px;">' + total + '</span>';
+}
+function shareContractsWA(){
+  if(contracts.length === 0){ toast(t('msgNoDeliveries'),'error'); return; }
+  var msg = t('contractsLogTitle') + '\n';
+  var tot = 0;
+  contracts.forEach(function(c){ tot += c.count; var wb = c.waybill ? ' (' + c.waybill + ')' : ''; var rc = c.receiver ? ' - ' + c.receiver : ''; msg += c.date + ' | ' + c.count + wb + rc + '\n'; });
+  msg += '----------------\n' + t('excelTotal') + ' | ' + tot;
+  openWA('', msg);
+}
+function genEmail(){
+  var dv = document.getElementById('emailDate').value;
+  var d = dv ? new Date(dv) : new Date();
+  var mn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  var f = d.getDate() + ' ' + mn[d.getMonth()];
+  return {
+    subject: t('emailSubject') + ' - ' + AGENT.location[currentLang] + ' ' + f,
+    body: t('emailGreeting') + '\n\n' + t('emailBody1') + ', (' + f + ').\n\n' + t('emailBody2') + '\n\n' + t('emailGovernorate') + ': (' + AGENT.location[currentLang].toUpperCase() + ')\n\n' + t('emailRep') + ': (' + AGENT.name[currentLang] + ')\n\n' + t('emailConfirm') + '\n\n' + t('emailRegards') + '\n' + AGENT.name[currentLang]
+  };
+}
+function updateEmailPreview(){ var e = genEmail(); document.getElementById('previewSubject').innerText = e.subject; document.getElementById('previewBody').innerText = e.body; }
+function shareEmail(){ var e = genEmail(); var txt = 'Subject: ' + e.subject + '\n\n' + e.body; if(navigator.share){ navigator.share({title:e.subject, text:txt}).then(function(){ toast(t('msgShared'),'success'); }).catch(function(err){ if(err.name === 'AbortError') return; openWA('', txt); }); } else { openWA('', txt); } }
+function copyEmailText(){ var e = genEmail(); copyText('Subject: ' + e.subject + '\n\n' + e.body).then(function(ok){ toast(ok ? t('msgCopied') : t('msgCopyFailed'), ok ? 'success' : 'error'); }); }
+
+function loadApp(){
+  checkDateReset();
+  document.getElementById('targetAmount').value = lsGet('target') || '';
+  document.getElementById('achievedAmount').value = lsGet('achieved') || '';
+  document.getElementById('contractDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('emailDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('startCount').value = parseInt(lsGet('baseCount')) || '';
+  document.getElementById('startLimit').value = parseInt(lsGet('baseLimit')) || '';
+  document.getElementById('appCount').value = lsGet('appCount') || '';
+  document.getElementById('appLimit').value = lsGet('appLimit') || '';
+  document.getElementById('rejCount').value = lsGet('rejCount') || '';
+  document.getElementById('reportDate').value = new Date().toISOString().split('T')[0];
+  applyLang();
+  onReportDateChange();
+}
+window.onload = function(){ loadApp(); runAutoCleanup(); };
+</script>
+</body>
+</html>
